@@ -1,0 +1,189 @@
+#include<Wire.h>
+#include <SoftwareWire.h>
+
+enum {Idle,Processing, Target0, Target1, Target2, Target3, Target4, Target5};
+SoftwareWire myWire(12, 13);  //SSDA and SSCL pins instead of A4 and A5
+int Current = Idle;
+bool onComplete = false;
+
+const int sensorPin0 = A0;
+const int sensorPin1 = A1;
+const int sensorPin2 = A2;
+const int sensorPin3 = A3;
+const int sensorPin4 = A4;
+const int sensorPin5 = A5;
+
+const int LEDr1 = 4;
+const int LEDr2 = 5;
+const int LEDy1 = 6;
+const int LEDy2 = 7;
+const int LEDg1 = 8;
+const int LEDg2 = 9;
+
+const int buzzerPin = 11;
+
+// variables to store the value coming from the sensors
+int sensorValue0 = 0;
+int sensorValue1 = 0;
+int sensorValue2 = 0;
+int sensorValue3 = 0;
+int sensorValue4 = 0;
+int sensorValue5 = 0;
+
+
+void setup() {
+Serial.begin(9600); //sets serial port for communication
+
+  myWire.begin();
+
+  pinMode (LEDr1, OUTPUT);
+  pinMode (LEDr2, OUTPUT);
+  pinMode (LEDy1, OUTPUT);
+  pinMode (LEDy2, OUTPUT);
+  pinMode (LEDg1, OUTPUT);
+  pinMode (LEDg2, OUTPUT);
+
+  pinMode(buzzerPin,OUTPUT);
+}
+
+void loop() {
+
+sensorValue0 = analogRead(sensorPin0);
+sensorValue1 = analogRead(sensorPin1);
+sensorValue2 = analogRead(sensorPin2);
+sensorValue3 = analogRead(sensorPin3);
+sensorValue4 = analogRead(sensorPin4);
+sensorValue5 = analogRead(sensorPin5);
+
+switch(Current){
+
+  case Idle:
+    onComplete = false;
+
+    digitalWrite (LEDr1, LOW);
+    digitalWrite (LEDr2, LOW);
+    digitalWrite (LEDy1, LOW);
+    digitalWrite (LEDy2, LOW);
+    digitalWrite (LEDg1, LOW);
+    digitalWrite (LEDg2, LOW);
+    delay(100);
+    Current = Processing;
+  break;  
+
+  case Processing:
+    if (sensorValue0 > 40){
+      Current = Target0;
+      Serial.println("Target0 HIT - 5 points");
+    }
+    else if (sensorValue1 > 40){
+      Current = Target1;
+      Serial.println("Target1 HIT - 5 points");
+    }
+    else if (sensorValue2 > 40){
+      Current = Target2;
+      Serial.println("Target2 HIT - 10 points");
+    }
+    else if (sensorValue3 > 40){
+      Current = Target3;
+      Serial.println("Target3 HIT - 10 points");
+    }
+    else if (sensorValue4 > 40){
+      Current = Target4; 
+      Serial.println("Target4 HIT - 20 points!");
+    }
+    else if (sensorValue5 > 40){
+      Current = Target5; 
+      Serial.println("Target5 HIT - 20 points!");
+    }
+    else {
+      Current = Idle;
+    }
+    break;
+
+    case Target0:
+      digitalWrite (LEDr1, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(5);
+      myWire.endTransmission();
+      
+      delay(1000);
+
+      Current = Idle;
+      break;
+     
+      
+    case Target1:
+      digitalWrite (LEDr2, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(5);
+      myWire.endTransmission();
+      
+      delay(1000);
+    
+      Current = Idle;
+      break; 
+
+    case Target2:
+      digitalWrite (LEDy1, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(10);
+      myWire.endTransmission();
+      
+      delay(1000);
+
+      Current = Idle;
+      break;   
+
+    case Target3:
+      digitalWrite (LEDy2, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(10);
+      myWire.endTransmission();
+      
+      delay(1000);
+      
+      Current = Idle;
+      break;  
+
+    case Target4:
+      digitalWrite (LEDg1, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(20);
+      myWire.endTransmission();
+      
+      delay(1000);
+  
+      Current = Idle;
+      break; 
+
+    case Target5:
+      digitalWrite (LEDg2, HIGH);
+      noise(1200,200);
+      myWire.beginTransmission(5);
+      myWire.write(20);
+      myWire.endTransmission();
+      
+      delay(1000);
+
+      Current = Idle;
+      break;      
+
+}
+
+delay(100);
+}
+
+void noise(int freq, int duration)  {
+int low = freq - 300;
+int high = freq + 300;
+unsigned long time = millis();
+while(millis() - time <= duration)  {
+tone(buzzerPin, random(low, high));
+}
+noTone(buzzerPin);
+}
